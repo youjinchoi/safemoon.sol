@@ -677,8 +677,9 @@ interface IUniswapV2Router02 is IUniswapV2Router01 {
     ) external;
 }
 
+// deploy on June 11th, 2021 https://testnet.bscscan.com/token/0x66090823efdcf679b810b6a25443c683ea6daeb5?a=0xcd7511f4aa2fb5c18fdb7cf6997061c61ea42060
 
-contract Covac is Context, IERC20, Ownable {
+contract SafemoonFork is Context, IERC20, Ownable {
     using SafeMath for uint256;
     using Address for address;
 
@@ -697,13 +698,13 @@ contract Covac is Context, IERC20, Ownable {
     uint256 private _rTotal;
     uint256 private _tFeeTotal;
 
-    string private _name = "Covid Vaccine";
-    string private _symbol = "COVAC";
+    string private _name = "Safemoon Fork";
+    string private _symbol = "SFMF";
     uint8 private _decimals = 18;
     
     uint256 public _taxFee = 5;
     uint256 private _previousTaxFee = _taxFee;
-    
+
     uint256 public _liquidityFee = 5;
     uint256 private _previousLiquidityFee = _liquidityFee;
 
@@ -729,7 +730,7 @@ contract Covac is Context, IERC20, Ownable {
         _;
         inSwapAndLiquify = false;
     }
-    
+
     constructor () public {
         // 10% burn at creation to celebrate 10% global vaccination hit on May 25th, 2021
         uint256 _burnAtCreation = _initialTotal.div(10);
@@ -737,7 +738,7 @@ contract Covac is Context, IERC20, Ownable {
         _rTotal = (MAX - (MAX % _tTotal));
         _maxTxAmount = _tTotal.mul(11).div(1000);
         _rOwned[_msgSender()] = _rTotal;
-        
+
         IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(0x05fF2B0DB69458A0750badebc4f9e13aDd608C7F);
          // Create a uniswap pair for this new token
         uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory())
@@ -943,17 +944,17 @@ contract Covac is Context, IERC20, Ownable {
             10**2
         );
     }
-    
+
     function removeAllFee() private {
         if(_taxFee == 0 && _liquidityFee == 0) return;
-        
+
         _previousTaxFee = _taxFee;
         _previousLiquidityFee = _liquidityFee;
-        
+
         _taxFee = 0;
         _liquidityFee = 0;
     }
-    
+
     function restoreAllFee() private {
         _taxFee = _previousTaxFee;
         _liquidityFee = _previousLiquidityFee;
@@ -1077,7 +1078,7 @@ contract Covac is Context, IERC20, Ownable {
     function _tokenTransfer(address sender, address recipient, uint256 amount,bool takeFee) private {
         if (!takeFee)
             removeAllFee();
-        
+
         if (_isExcluded[sender] && !_isExcluded[recipient]) {
             _transferFromExcluded(sender, recipient, amount);
         } else if (!_isExcluded[sender] && _isExcluded[recipient]) {
@@ -1089,7 +1090,7 @@ contract Covac is Context, IERC20, Ownable {
         } else {
             _transferStandard(sender, recipient, amount);
         }
-        
+
         if (!takeFee)
             restoreAllFee();
     }
@@ -1107,7 +1108,7 @@ contract Covac is Context, IERC20, Ownable {
         (uint256 rAmount, uint256 rTransferAmount, uint256 rFee, uint256 tTransferAmount, uint256 tFee, uint256 tLiquidity) = _getValues(tAmount);
         _rOwned[sender] = _rOwned[sender].sub(rAmount);
         _tOwned[recipient] = _tOwned[recipient].add(tTransferAmount);
-        _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount);           
+        _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount);
         _takeLiquidity(tLiquidity);
         _reflectFee(rFee, tFee);
         emit Transfer(sender, recipient, tTransferAmount);
@@ -1117,7 +1118,7 @@ contract Covac is Context, IERC20, Ownable {
         (uint256 rAmount, uint256 rTransferAmount, uint256 rFee, uint256 tTransferAmount, uint256 tFee, uint256 tLiquidity) = _getValues(tAmount);
         _tOwned[sender] = _tOwned[sender].sub(tAmount);
         _rOwned[sender] = _rOwned[sender].sub(rAmount);
-        _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount);   
+        _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount);
         _takeLiquidity(tLiquidity);
         _reflectFee(rFee, tFee);
         emit Transfer(sender, recipient, tTransferAmount);

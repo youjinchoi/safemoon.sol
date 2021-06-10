@@ -1,0 +1,32 @@
+{
+  "name": "safemoon-fork",
+  "version": "1.0.0",
+  "description": "",
+  "main": "truffle-config.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "deploy:testnet": "truffle migrate --network bscTestnet",
+    "console:testnet": "truffle console --network bscTestnet",
+    "verify:testnet": "truffle run verify SafemoonFork --network bscTestnet"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/youjinchoi/safemoon.sol.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/youjinchoi/safemoon.sol/issues"
+  },
+  "homepage": "https://github.com/youjinchoi/safemoon.sol#readme",
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.1.0",
+    "@truffle/hdwallet-provider": "^1.4.0"
+  },
+  "devDependencies": {
+    "truffle-plugin-verify": "^0.5.8"
+  }
+}

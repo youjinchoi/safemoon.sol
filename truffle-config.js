@@ -111,5 +111,12 @@ module.exports = {
 
   db: {
     enabled: false
+  },
+
+  plugins: [
+    'truffle-plugin-verify'
+  ],
+  api_keys: {
+    bscscan: '4EVTT1FDIJ1P5MF9G8UFKDACCWWN8X3V4E'
   }
 };

@@ -677,7 +677,9 @@ interface IUniswapV2Router02 is IUniswapV2Router01 {
     ) external;
 }
 
-// deploy on June 11th, 2021 https://testnet.bscscan.com/token/0x66090823efdcf679b810b6a25443c683ea6daeb5?a=0xcd7511f4aa2fb5c18fdb7cf6997061c61ea42060
+// deploy at 23:21, June 10th, 2021 https://testnet.bscscan.com/token/0x66090823efdcf679b810b6a25443c683ea6daeb5
+// deploy at 01:46, June 11th, 2021 https://testnet.bscscan.com/token/0xA6A7F73204E014D01592418AAeef010bCC948a5B
+// deploy at 02:10, June 11th, 2021 https://testnet.bscscan.com/token/0x0E43a88c7B047B537e90aC8E5832137804C86013
 
 contract SafemoonFork is Context, IERC20, Ownable {
     using SafeMath for uint256;
@@ -693,13 +695,12 @@ contract SafemoonFork is Context, IERC20, Ownable {
     address[] private _excluded;
    
     uint256 private constant MAX = ~uint256(0);
-    uint256 private _initialTotal = 19000000000 * 10**18;
-    uint256 private _tTotal;
+    uint256 private _tTotal = 19000000000 * 10**18;
     uint256 private _rTotal;
     uint256 private _tFeeTotal;
 
-    string private _name = "Safemoon Fork";
-    string private _symbol = "SFMF";
+    string private _name = "Covid vaccine test 02";
+    string private _symbol = "COVAC";
     uint8 private _decimals = 18;
     
     uint256 public _taxFee = 5;
@@ -731,15 +732,8 @@ contract SafemoonFork is Context, IERC20, Ownable {
         inSwapAndLiquify = false;
     }
 
-    constructor () public {
-        // 10% burn at creation to celebrate 10% global vaccination hit on May 25th, 2021
-        uint256 _burnAtCreation = _initialTotal.div(10);
-        _tTotal = _initialTotal.sub(_burnAtCreation);
-        _rTotal = (MAX - (MAX % _tTotal));
-        _maxTxAmount = _tTotal.mul(11).div(1000);
-        _rOwned[_msgSender()] = _rTotal;
-
-        IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(0x05fF2B0DB69458A0750badebc4f9e13aDd608C7F);
+    constructor (address dexAddress) public {
+        IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(dexAddress);
          // Create a uniswap pair for this new token
         uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory())
             .createPair(address(this), _uniswapV2Router.WETH());
@@ -754,8 +748,16 @@ contract SafemoonFork is Context, IERC20, Ownable {
         // exclude burn address from reward
         _isExcluded[address(0)] = true;
         _excluded.push(address(0));
+
+        // 10% burn at creation to celebrate 10% global vaccination hit on May 25th, 2021
+        uint256 _burnAtCreation = _tTotal.div(10);
+        _rTotal = MAX - (MAX % (_tTotal.sub(_burnAtCreation)));
+        _maxTxAmount = _tTotal.mul(11).div(1000);
+
+        _rOwned[_msgSender()] = _rTotal;
+        _tOwned[address(0)] = _burnAtCreation;
         
-        emit Transfer(address(0), _msgSender(), _initialTotal);
+        emit Transfer(address(0), _msgSender(), _tTotal);
         emit Transfer(_msgSender(), address(0), _burnAtCreation);
     }
 
@@ -772,7 +774,7 @@ contract SafemoonFork is Context, IERC20, Ownable {
     }
 
     function totalSupply() public view override returns (uint256) {
-        return _initialTotal;
+        return _tTotal;
     }
 
     function balanceOf(address account) public view override returns (uint256) {

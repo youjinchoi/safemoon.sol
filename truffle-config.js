@@ -24,6 +24,10 @@ const binanceTestnetProvider = new HDWalletProvider({
   privateKeys: ["e323f018515495af1a44b8ea576836584695b927ad338871c9e18949eedd7461"],
   providerOrUrl: "https://data-seed-prebsc-1-s1.binance.org:8545/"
 })
+const binanceMainnetProvider = new HDWalletProvider({
+  privateKeys: [""],
+  providerOrUrl: "https://bsc-dataseed.binance.org/"
+})
 // const infuraKey = "fj4jll3k.....";
 //
 // const fs = require('fs');
@@ -50,6 +54,12 @@ module.exports = {
     bscTestnet: {
       provider: () => binanceTestnetProvider,
       network_id: "97",
+      // gas: 6721975,
+      // gasPrice: 20000000000
+    },
+    bscMainnet: {
+      provider: () => binanceMainnetProvider,
+      network_id: "56",
       // gas: 6721975,
       // gasPrice: 20000000000
     },

@@ -10,7 +10,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "deploy:testnet": "truffle migrate --network bscTestnet",
     "console:testnet": "truffle console --network bscTestnet",
-    "verify:testnet": "truffle run verify SafemoonFork --network bscTestnet"
+    "verify:testnet": "truffle run verify SafemoonFork --network bscTestnet",
+    "deploy:mainnet": "truffle migrate --network bscMainnet",
+    "verify:mainnet": "truffle run verify SafemoonFork --network bscMainnet"
   },
   "repository": {
     "type": "git",

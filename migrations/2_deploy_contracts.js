@@ -6,6 +6,6 @@ module.exports = function (deployer, network) {
     if(network === 'bscTestnet') {
         deployer.deploy(SafemoonFork, '0xD99D1c33F9fC3444f8101754aBC46c52416550D1');
     } else {
-        deployer.deploy(SafemoonFork, '0x05fF2B0DB69458A0750badebc4f9e13aDd608C7F');
+        deployer.deploy(SafemoonFork, '0x10ed43c718714eb63d5aa57b78b54704e256024e');
     }
 };

@@ -1,6 +1,6 @@
-pragma solidity ^0.6.12;
+pragma solidity ^0.8.0;
 // SPDX-License-Identifier: Unlicensed
-interface IERC20 {
+interface IBEP20 {
 
     function totalSupply() external view returns (uint256);
 
@@ -84,7 +84,7 @@ interface IERC20 {
  * Using this library instead of the unchecked operations eliminates an entire
  * class of bugs, so it's recommended to use it always.
  */
- 
+
 library SafeMath {
     /**
      * @dev Returns the addition of two unsigned integers, reverting on
@@ -229,7 +229,7 @@ library SafeMath {
 }
 
 abstract contract Context {
-    function _msgSender() internal view virtual returns (address payable) {
+    function _msgSender() internal view virtual returns (address) {
         return msg.sender;
     }
 
@@ -315,7 +315,7 @@ library Address {
      * _Available since v3.1._
      */
     function functionCall(address target, bytes memory data) internal returns (bytes memory) {
-      return functionCall(target, data, "Address: low-level call failed");
+        return functionCall(target, data, "Address: low-level call failed");
     }
 
     /**
@@ -400,7 +400,7 @@ contract Ownable is Context {
     /**
      * @dev Initializes the contract setting the deployer as the initial owner.
      */
-    constructor () internal {
+    constructor () {
         address msgSender = _msgSender();
         _owner = msgSender;
         emit OwnershipTransferred(address(0), msgSender);
@@ -421,13 +421,13 @@ contract Ownable is Context {
         _;
     }
 
-     /**
-     * @dev Leaves the contract without owner. It will not be possible to call
-     * `onlyOwner` functions anymore. Can only be called by the current owner.
-     *
-     * NOTE: Renouncing ownership will leave the contract without an owner,
-     * thereby removing any functionality that is only available to the owner.
-     */
+    /**
+    * @dev Leaves the contract without owner. It will not be possible to call
+    * `onlyOwner` functions anymore. Can only be called by the current owner.
+    *
+    * NOTE: Renouncing ownership will leave the contract without an owner,
+    * thereby removing any functionality that is only available to the owner.
+    */
     function renounceOwnership() public virtual onlyOwner {
         emit OwnershipTransferred(_owner, address(0));
         _owner = address(0);
@@ -451,22 +451,20 @@ contract Ownable is Context {
     function lock(uint256 time) public virtual onlyOwner {
         _previousOwner = _owner;
         _owner = address(0);
-        _lockTime = now + time;
+        _lockTime = block.timestamp + time;
         emit OwnershipTransferred(_owner, address(0));
     }
-    
+
     //Unlocks the contract for owner when _lockTime is exceeds
     function unlock() public virtual {
         require(_previousOwner == msg.sender, "You don't have permission to unlock");
-        require(now > _lockTime , "Contract is locked until 7 days");
+        require(block.timestamp > _lockTime , "Contract is locked until 7 days");
         emit OwnershipTransferred(_owner, _previousOwner);
         _owner = _previousOwner;
     }
 }
 
-// pragma solidity >=0.5.0;
-
-interface IUniswapV2Factory {
+interface IPancakeFactory {
     event PairCreated(address indexed token0, address indexed token1, address pair, uint);
 
     function feeTo() external view returns (address);
@@ -482,10 +480,7 @@ interface IUniswapV2Factory {
     function setFeeToSetter(address) external;
 }
 
-
-// pragma solidity >=0.5.0;
-
-interface IUniswapV2Pair {
+interface IPancakePair {
     event Approval(address indexed owner, address indexed spender, uint value);
     event Transfer(address indexed from, address indexed to, uint value);
 
@@ -536,9 +531,7 @@ interface IUniswapV2Pair {
     function initialize(address, address) external;
 }
 
-// pragma solidity >=0.6.2;
-
-interface IUniswapV2Router01 {
+interface IPancakeRouter01 {
     function factory() external pure returns (address);
     function WETH() external pure returns (address);
 
@@ -611,19 +604,19 @@ interface IUniswapV2Router01 {
         uint deadline
     ) external returns (uint[] memory amounts);
     function swapExactETHForTokens(uint amountOutMin, address[] calldata path, address to, uint deadline)
-        external
-        payable
-        returns (uint[] memory amounts);
+    external
+    payable
+    returns (uint[] memory amounts);
     function swapTokensForExactETH(uint amountOut, uint amountInMax, address[] calldata path, address to, uint deadline)
-        external
-        returns (uint[] memory amounts);
+    external
+    returns (uint[] memory amounts);
     function swapExactTokensForETH(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline)
-        external
-        returns (uint[] memory amounts);
+    external
+    returns (uint[] memory amounts);
     function swapETHForExactTokens(uint amountOut, address[] calldata path, address to, uint deadline)
-        external
-        payable
-        returns (uint[] memory amounts);
+    external
+    payable
+    returns (uint[] memory amounts);
 
     function quote(uint amountA, uint reserveA, uint reserveB) external pure returns (uint amountB);
     function getAmountOut(uint amountIn, uint reserveIn, uint reserveOut) external pure returns (uint amountOut);
@@ -634,9 +627,7 @@ interface IUniswapV2Router01 {
 
 
 
-// pragma solidity >=0.6.2;
-
-interface IUniswapV2Router02 is IUniswapV2Router01 {
+interface IPancakeRouter02 is IPancakeRouter01 {
     function removeLiquidityETHSupportingFeeOnTransferTokens(
         address token,
         uint liquidity,
@@ -677,6 +668,9 @@ interface IUniswapV2Router02 is IUniswapV2Router01 {
     ) external;
 }
 
+// test router 0x9Ac64Cc6e4415144C455BD8E4837Fea55603e5c3
+// test pair 0x844842f7797a0c3cf98b08d27270afb12df55073
+
 // deploy at 23:21, June 10th, 2021 https://testnet.bscscan.com/token/0x66090823efdcf679b810b6a25443c683ea6daeb5
 // deploy at 01:46, June 11th, 2021 https://testnet.bscscan.com/token/0xA6A7F73204E014D01592418AAeef010bCC948a5B
 // deploy at 02:10, June 11th, 2021 https://testnet.bscscan.com/token/0x0E43a88c7B047B537e90aC8E5832137804C86013
@@ -685,7 +679,12 @@ interface IUniswapV2Router02 is IUniswapV2Router01 {
 // CVT05, deploy at 00:47, June 13th, 2021 https://testnet.bscscan.com/token/0x932E0049c2b2FDe2Dd82bb17a7a0D4f996F7250F
 // CVT06, deploy at 01:15, June 13th, 2021 https://testnet.bscscan.com/token/0x47c2eA7C89a63539415EC10e5D63afB9f3969955
 // CVT07, deploy at 10:44, June 13th, 2021 https://testnet.bscscan.com/token/0x6f6483195d34d3747884EFCda1b0BE423d1cA546
-contract SafemoonFork is Context, IERC20, Ownable {
+// CVT08, deploy at 17:31, June 13th, 2021 https://bscscan.com/token/0xb9bab54de525353515ae42d498a3af07e074794f
+// CVT09, deploy at 23:26, June 13th, 2021 https://testnet.bscscan.com/token/0x3CFCb1006d22Fd84855Ee4E6AE3f464D0b18C999
+// CVT10, deploy at 23:53, June 13th, 2021 https://testnet.bscscan.com/token/0x88ABcDE0E023bEA901bE5752955D622259720E97
+// CVT11, deploy at 23:53, June 13th, 2021 https://testnet.bscscan.com/token/0xBA5e4A4E7e15eB2E2F7e3A52f556F2Eb86D151a0
+// CVT12 https://testnet.bscscan.com/token/0x34F9289fac8a84410B371f1f62c43e183A28Ca4C
+contract Covac is Context, IBEP20, Ownable {
     using SafeMath for uint256;
     using Address for address;
 
@@ -703,8 +702,8 @@ contract SafemoonFork is Context, IERC20, Ownable {
     uint256 private _rTotal = MAX - (MAX % _tTotal);
     uint256 private _tFeeTotal;
 
-    string private constant _name = "Covid vaccine test 07";
-    string private constant _symbol = "CVT07";
+    string private constant _name = "Covid Vaccine";
+    string private constant _symbol = "COVAC";
     uint8 private constant _decimals = 18;
     
     uint256 public _taxFee = 5;
@@ -713,39 +712,38 @@ contract SafemoonFork is Context, IERC20, Ownable {
     uint256 public _liquidityFee = 5;
     uint256 private _previousLiquidityFee = _liquidityFee;
 
-    IUniswapV2Router02 public immutable uniswapV2Router;
-    address public immutable uniswapV2Pair;
+    IPancakeRouter02 public pancakeRouter;
+    address public pancakePair;
     
     bool inSwapAndLiquify;
-    bool public swapAndLiquifyEnabled = true;
+    bool public swapAndLiquifyEnabled = false;
 
     // 1.1% of total supply is the maximum transaction amount
     uint256 public constant _maxTxAmount = 209000000 * 10**18;
     uint256 private constant numTokensSellToAddToLiquidity = 500000 * 10**18;
     
-    event MinTokensBeforeSwapUpdated(uint256 minTokensBeforeSwap);
     event SwapAndLiquifyEnabledUpdated(bool enabled);
     event SwapAndLiquify(
         uint256 tokensSwapped,
         uint256 ethReceived,
         uint256 tokensIntoLiqiudity
     );
-    
+
     modifier lockTheSwap {
         inSwapAndLiquify = true;
         _;
         inSwapAndLiquify = false;
     }
 
-    constructor (address dexAddress) public {
-        IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(dexAddress);
-         // Create a uniswap pair for this new token
-        uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory())
-            .createPair(address(this), _uniswapV2Router.WETH());
+    constructor (address routerAddress) {
+        IPancakeRouter02 _pancakeRouter = IPancakeRouter02(routerAddress);
+         // Create a pancakeswap pair for this new token
+        pancakePair = IPancakeFactory(_pancakeRouter.factory())
+            .createPair(address(this), _pancakeRouter.WETH());
 
         // set the rest of the contract variables
-        uniswapV2Router = _uniswapV2Router;
-        
+        pancakeRouter = _pancakeRouter;
+
         // exclude owner and this contract from fee
         _isExcludedFromFee[owner()] = true;
         _isExcludedFromFee[address(this)] = true;
@@ -770,7 +768,7 @@ contract SafemoonFork is Context, IERC20, Ownable {
         return _decimals;
     }
 
-    function totalSupply() public view override returns (uint256) {
+    function totalSupply() public pure override returns (uint256) {
         return _tTotal;
     }
 
@@ -795,7 +793,7 @@ contract SafemoonFork is Context, IERC20, Ownable {
 
     function transferFrom(address sender, address recipient, uint256 amount) public override returns (bool) {
         _transfer(sender, recipient, amount);
-        _approve(sender, _msgSender(), _allowances[sender][_msgSender()].sub(amount, "ERC20: transfer amount exceeds allowance"));
+        _approve(sender, _msgSender(), _allowances[sender][_msgSender()].sub(amount, "BEP20: transfer amount exceeds allowance"));
         return true;
     }
 
@@ -805,7 +803,7 @@ contract SafemoonFork is Context, IERC20, Ownable {
     }
 
     function decreaseAllowance(address spender, uint256 subtractedValue) public virtual returns (bool) {
-        _approve(_msgSender(), spender, _allowances[_msgSender()][spender].sub(subtractedValue, "ERC20: decreased allowance below zero"));
+        _approve(_msgSender(), spender, _allowances[_msgSender()][spender].sub(subtractedValue, "BEP20: decreased allowance below zero"));
         return true;
     }
 
@@ -832,6 +830,21 @@ contract SafemoonFork is Context, IERC20, Ownable {
         require(rAmount <= _rTotal, "Amount must be less than total reflections");
         uint256 currentRate =  _getRate();
         return rAmount.div(currentRate);
+    }
+
+    // make the router and pair updatable to change liquidity pool if deprecated
+    function setRouter(address routerAddress) public onlyOwner() {
+        IPancakeRouter02 _pancakeRouter = IPancakeRouter02(routerAddress);
+        IPancakeFactory _pancakeFactory = IPancakeFactory(_pancakeRouter.factory());
+        address _pairAddress = _pancakeFactory.getPair(address(this), _pancakeRouter.WETH());
+        if (_pairAddress == address(0)) {
+            pancakePair = _pancakeFactory.createPair(address(this), _pancakeRouter.WETH());
+        } else {
+            pancakePair = _pairAddress;
+        }
+
+        // set the rest of the contract variables
+        pancakeRouter = _pancakeRouter;
     }
 
     function excludeFromReward(address account) public onlyOwner() {
@@ -869,7 +882,7 @@ contract SafemoonFork is Context, IERC20, Ownable {
         emit SwapAndLiquifyEnabledUpdated(_enabled);
     }
     
-    // to receive ETH from uniswapV2Router when swapping
+    // to receive BNB from pancakeswap router when swapping
     receive() external payable {}
 
     function _reflectFee(uint256 rFee, uint256 tFee) private {
@@ -955,8 +968,8 @@ contract SafemoonFork is Context, IERC20, Ownable {
     }
 
     function _approve(address owner, address spender, uint256 amount) private {
-        require(owner != address(0), "ERC20: approve from the zero address");
-        require(spender != address(0), "ERC20: approve to the zero address");
+        require(owner != address(0), "BEP20: approve from the zero address");
+        require(spender != address(0), "BEP20: approve to the zero address");
 
         _allowances[owner][spender] = amount;
         emit Approval(owner, spender, amount);
@@ -967,10 +980,10 @@ contract SafemoonFork is Context, IERC20, Ownable {
         address to,
         uint256 amount
     ) private {
-        require(from != address(0), "ERC20: transfer from the zero address");
+        require(from != address(0), "BEP20: transfer from the zero address");
         // only owner can transfer to zero address to burn tokens
         if (from != owner()) {
-            require(to != address(0), "ERC20: transfer to the zero address");
+            require(to != address(0), "BEP20: transfer to the zero address");
         }
         require(amount > 0, "Transfer amount must be greater than zero");
         if (from != owner() && to != owner()) {
@@ -980,20 +993,21 @@ contract SafemoonFork is Context, IERC20, Ownable {
         // is the token balance of this contract address over the min number of
         // tokens that we need to initiate a swap + liquidity lock?
         // also, don't get caught in a circular liquidity event.
-        // also, don't swap & liquify if sender is uniswap pair.
+        // also, don't swap & liquify if sender is pancakeswap pair.
         uint256 contractTokenBalance = balanceOf(address(this));
-        
+
         if (contractTokenBalance >= _maxTxAmount)
         {
             contractTokenBalance = _maxTxAmount;
         }
-        
+
         bool overMinTokenBalance = contractTokenBalance >= numTokensSellToAddToLiquidity;
         if (
             overMinTokenBalance &&
             !inSwapAndLiquify &&
-            from != uniswapV2Pair &&
-            swapAndLiquifyEnabled
+            from != pancakePair &&
+            swapAndLiquifyEnabled &&
+            !(from == address(this) && to == pancakePair)
         ) {
             contractTokenBalance = numTokensSellToAddToLiquidity;
             // add liquidity
@@ -1017,36 +1031,36 @@ contract SafemoonFork is Context, IERC20, Ownable {
         uint256 half = contractTokenBalance.div(2);
         uint256 otherHalf = contractTokenBalance.sub(half);
 
-        // capture the contract's current ETH balance.
-        // this is so that we can capture exactly the amount of ETH that the
-        // swap creates, and not make the liquidity event include any ETH that
+        // capture the contract's current BNB balance.
+        // this is so that we can capture exactly the amount of BNB that the
+        // swap creates, and not make the liquidity event include any BNB that
         // has been manually sent to the contract
         uint256 initialBalance = address(this).balance;
 
-        // swap tokens for ETH
-        swapTokensForEth(half); // <- this breaks the ETH -> HATE swap when swap+liquify is triggered
+        // swap tokens for BNB
+        swapTokensForEth(half); // <- this breaks the BNB -> HATE swap when swap+liquify is triggered
 
-        // how much ETH did we just swap into?
+        // how much BNB did we just swap into?
         uint256 newBalance = address(this).balance.sub(initialBalance);
 
-        // add liquidity to uniswap
+        // add liquidity to pancakeswap
         addLiquidity(otherHalf, newBalance);
         
         emit SwapAndLiquify(half, newBalance, otherHalf);
     }
 
     function swapTokensForEth(uint256 tokenAmount) private {
-        // generate the uniswap pair path of token -> weth
+        // generate the pancakeswap pair path of token -> weth
         address[] memory path = new address[](2);
         path[0] = address(this);
-        path[1] = uniswapV2Router.WETH();
+        path[1] = pancakeRouter.WETH();
 
-        _approve(address(this), address(uniswapV2Router), tokenAmount);
+        _approve(address(this), address(pancakeRouter), tokenAmount);
 
         // make the swap
-        uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(
+        pancakeRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(
             tokenAmount,
-            0, // accept any amount of ETH
+            0, // accept any amount of BNB
             path,
             address(this),
             block.timestamp
@@ -1055,12 +1069,12 @@ contract SafemoonFork is Context, IERC20, Ownable {
 
     function addLiquidity(uint256 tokenAmount, uint256 ethAmount) private {
         // approve token transfer to cover all possible scenarios
-        _approve(address(this), address(uniswapV2Router), tokenAmount);
+        _approve(address(this), address(pancakeRouter), tokenAmount);
 
         // SSL-06 | Return value not handled
         // We recommend using variables to receive the return value of the functions mentioned above andhandle both success and failure cases if needed by the business logic.
         // add the liquidity
-        uniswapV2Router.addLiquidityETH{value: ethAmount}(
+        pancakeRouter.addLiquidityETH{value: ethAmount}(
             address(this),
             tokenAmount,
             0, // slippage is unavoidable

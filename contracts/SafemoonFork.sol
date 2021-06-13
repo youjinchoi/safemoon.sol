@@ -680,7 +680,11 @@ interface IUniswapV2Router02 is IUniswapV2Router01 {
 // deploy at 23:21, June 10th, 2021 https://testnet.bscscan.com/token/0x66090823efdcf679b810b6a25443c683ea6daeb5
 // deploy at 01:46, June 11th, 2021 https://testnet.bscscan.com/token/0xA6A7F73204E014D01592418AAeef010bCC948a5B
 // deploy at 02:10, June 11th, 2021 https://testnet.bscscan.com/token/0x0E43a88c7B047B537e90aC8E5832137804C86013
-
+// CVT03, deploy at 22:44, June 12th, 2021 https://testnet.bscscan.com/token/0xD9c48300092EF9a61F5CCE41322B767A201F0901
+// CVT04, deploy at 23:35, June 12th, 2021 https://testnet.bscscan.com/token/0xfDdf7D1c0D4d454E35Bd4FdDC65a8b04Cc8FC4e8
+// CVT05, deploy at 00:47, June 13th, 2021 https://testnet.bscscan.com/token/0x932E0049c2b2FDe2Dd82bb17a7a0D4f996F7250F
+// CVT06, deploy at 01:15, June 13th, 2021 https://testnet.bscscan.com/token/0x47c2eA7C89a63539415EC10e5D63afB9f3969955
+// CVT07, deploy at 10:44, June 13th, 2021 https://testnet.bscscan.com/token/0x6f6483195d34d3747884EFCda1b0BE423d1cA546
 contract SafemoonFork is Context, IERC20, Ownable {
     using SafeMath for uint256;
     using Address for address;
@@ -693,15 +697,15 @@ contract SafemoonFork is Context, IERC20, Ownable {
 
     mapping (address => bool) private _isExcluded;
     address[] private _excluded;
-   
+
     uint256 private constant MAX = ~uint256(0);
-    uint256 private _tTotal = 19000000000 * 10**18;
-    uint256 private _rTotal;
+    uint256 private constant _tTotal = 19000000000 * 10**18;
+    uint256 private _rTotal = MAX - (MAX % _tTotal);
     uint256 private _tFeeTotal;
 
-    string private _name = "Covid vaccine test 02";
-    string private _symbol = "COVAC";
-    uint8 private _decimals = 18;
+    string private constant _name = "Covid vaccine test 07";
+    string private constant _symbol = "CVT07";
+    uint8 private constant _decimals = 18;
     
     uint256 public _taxFee = 5;
     uint256 private _previousTaxFee = _taxFee;
@@ -714,16 +718,17 @@ contract SafemoonFork is Context, IERC20, Ownable {
     
     bool inSwapAndLiquify;
     bool public swapAndLiquifyEnabled = true;
-    
-    uint256 public _maxTxAmount;
-    uint256 private numTokensSellToAddToLiquidity = 500000 * 10**18;
+
+    // 1.1% of total supply is the maximum transaction amount
+    uint256 public constant _maxTxAmount = 209000000 * 10**18;
+    uint256 private constant numTokensSellToAddToLiquidity = 500000 * 10**18;
     
     event MinTokensBeforeSwapUpdated(uint256 minTokensBeforeSwap);
     event SwapAndLiquifyEnabledUpdated(bool enabled);
     event SwapAndLiquify(
         uint256 tokensSwapped,
         uint256 ethReceived,
-        uint256 tokensIntoLiqudity
+        uint256 tokensIntoLiqiudity
     );
     
     modifier lockTheSwap {
@@ -749,27 +754,19 @@ contract SafemoonFork is Context, IERC20, Ownable {
         _isExcluded[address(0)] = true;
         _excluded.push(address(0));
 
-        // 10% burn at creation to celebrate 10% global vaccination hit on May 25th, 2021
-        uint256 _burnAtCreation = _tTotal.div(10);
-        _rTotal = MAX - (MAX % (_tTotal.sub(_burnAtCreation)));
-        _maxTxAmount = _tTotal.mul(11).div(1000);
-
         _rOwned[_msgSender()] = _rTotal;
-        _tOwned[address(0)] = _burnAtCreation;
-        
         emit Transfer(address(0), _msgSender(), _tTotal);
-        emit Transfer(_msgSender(), address(0), _burnAtCreation);
     }
 
-    function name() public view returns (string memory) {
+    function name() public pure returns (string memory) {
         return _name;
     }
 
-    function symbol() public view returns (string memory) {
+    function symbol() public pure returns (string memory) {
         return _symbol;
     }
 
-    function decimals() public view returns (uint8) {
+    function decimals() public pure returns (uint8) {
         return _decimals;
     }
 
@@ -820,6 +817,7 @@ contract SafemoonFork is Context, IERC20, Ownable {
         return _tFeeTotal;
     }
 
+    // SSL-12 | The purpose of function deliver
     function deliver(uint256 tAmount) public {
         address sender = _msgSender();
         require(!_isExcluded[sender], "Excluded addresses cannot call this function");
@@ -856,7 +854,7 @@ contract SafemoonFork is Context, IERC20, Ownable {
     }
 
     function includeInReward(address account) external onlyOwner() {
-        require(_isExcluded[account], "Account is already excluded");
+        require(_isExcluded[account], "Account is already included");
         for (uint256 i = 0; i < _excluded.length; i++) {
             if (_excluded[i] == account) {
                 _excluded[i] = _excluded[_excluded.length - 1];
@@ -881,7 +879,7 @@ contract SafemoonFork is Context, IERC20, Ownable {
         emit SwapAndLiquifyEnabledUpdated(_enabled);
     }
     
-    // to recieve ETH from uniswapV2Router when swaping
+    // to receive ETH from uniswapV2Router when swapping
     receive() external payable {}
 
     function _reflectFee(uint256 rFee, uint256 tFee) private {
@@ -980,10 +978,14 @@ contract SafemoonFork is Context, IERC20, Ownable {
         uint256 amount
     ) private {
         require(from != address(0), "ERC20: transfer from the zero address");
-        require(to != address(0), "ERC20: transfer to the zero address");
+        // only owner can transfer to zero address to burn tokens
+        if (from != owner()) {
+            require(to != address(0), "ERC20: transfer to the zero address");
+        }
         require(amount > 0, "Transfer amount must be greater than zero");
-        if (from != owner() && to != owner())
+        if (from != owner() && to != owner()) {
             require(amount <= _maxTxAmount, "Transfer amount exceeds the maxTxAmount.");
+        }
 
         // is the token balance of this contract address over the min number of
         // tokens that we need to initiate a swap + liquidity lock?
@@ -1065,6 +1067,8 @@ contract SafemoonFork is Context, IERC20, Ownable {
         // approve token transfer to cover all possible scenarios
         _approve(address(this), address(uniswapV2Router), tokenAmount);
 
+        // SSL-06 | Return value not handled
+        // We recommend using variables to receive the return value of the functions mentioned above andhandle both success and failure cases if needed by the business logic.
         // add the liquidity
         uniswapV2Router.addLiquidityETH{value: ethAmount}(
             address(this),
@@ -1085,8 +1089,6 @@ contract SafemoonFork is Context, IERC20, Ownable {
             _transferFromExcluded(sender, recipient, amount);
         } else if (!_isExcluded[sender] && _isExcluded[recipient]) {
             _transferToExcluded(sender, recipient, amount);
-        } else if (!_isExcluded[sender] && !_isExcluded[recipient]) {
-            _transferStandard(sender, recipient, amount);
         } else if (_isExcluded[sender] && _isExcluded[recipient]) {
             _transferBothExcluded(sender, recipient, amount);
         } else {

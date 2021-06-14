@@ -668,24 +668,6 @@ interface IPancakeRouter02 is IPancakeRouter01 {
     ) external;
 }
 
-// test router 0xd99d1c33f9fc3444f8101754abc46c52416550d1
-// test pair 0x827fb0f3723008550be5d8adfbd4207a6bcb3003
-
-// deploy at 23:21, June 10th, 2021 https://testnet.bscscan.com/token/0x66090823efdcf679b810b6a25443c683ea6daeb5
-// deploy at 01:46, June 11th, 2021 https://testnet.bscscan.com/token/0xA6A7F73204E014D01592418AAeef010bCC948a5B
-// deploy at 02:10, June 11th, 2021 https://testnet.bscscan.com/token/0x0E43a88c7B047B537e90aC8E5832137804C86013
-// CVT03, deploy at 22:44, June 12th, 2021 https://testnet.bscscan.com/token/0xD9c48300092EF9a61F5CCE41322B767A201F0901
-// CVT04, deploy at 23:35, June 12th, 2021 https://testnet.bscscan.com/token/0xfDdf7D1c0D4d454E35Bd4FdDC65a8b04Cc8FC4e8
-// CVT05, deploy at 00:47, June 13th, 2021 https://testnet.bscscan.com/token/0x932E0049c2b2FDe2Dd82bb17a7a0D4f996F7250F
-// CVT06, deploy at 01:15, June 13th, 2021 https://testnet.bscscan.com/token/0x47c2eA7C89a63539415EC10e5D63afB9f3969955
-// CVT07, deploy at 10:44, June 13th, 2021 https://testnet.bscscan.com/token/0x6f6483195d34d3747884EFCda1b0BE423d1cA546
-// CVT08, deploy at 17:31, June 13th, 2021 https://bscscan.com/token/0xb9bab54de525353515ae42d498a3af07e074794f
-// CVT09, deploy at 23:26, June 13th, 2021 https://testnet.bscscan.com/token/0x3CFCb1006d22Fd84855Ee4E6AE3f464D0b18C999
-// CVT10, deploy at 23:53, June 13th, 2021 https://testnet.bscscan.com/token/0x88ABcDE0E023bEA901bE5752955D622259720E97
-// CVT11, deploy at 23:53, June 13th, 2021 https://testnet.bscscan.com/token/0xBA5e4A4E7e15eB2E2F7e3A52f556F2Eb86D151a0
-// CVT12 https://testnet.bscscan.com/token/0x34F9289fac8a84410B371f1f62c43e183A28Ca4C
-// CVT13 https://testnet.bscscan.com/token/0x699c9b4779cf9a12b6d7b963827d14eacf2de7e3
-// CVT14 https://testnet.bscscan.com/token/0x66b21DcC64bBB14d5192eEC86bd8Ce2580B06828#code
 contract Covac is Context, IBEP20, Ownable {
     using SafeMath for uint256;
     using Address for address;
@@ -720,7 +702,7 @@ contract Covac is Context, IBEP20, Ownable {
     bool _inSwapAndLiquify;
     bool public _swapAndLiquifyEnabled = true;
     // use when _swapAndLiquifyEnabled is false
-    address public _liquidityFeeExternalWallet = 0x8c3D390A73a9bE5053f3AbE3bdBf4E4c155C8680;
+    address public _liquidityFeeExternalWallet = 0xD467fB0BEc8D0735Bc2aA7770F6D383E211cA5Ab;
 
     // 1.1% of total supply is the maximum transaction amount
     uint256 public constant _maxTxAmount = 209000000 * 10**18;
@@ -742,7 +724,7 @@ contract Covac is Context, IBEP20, Ownable {
     }
 
     constructor () {
-        IPancakeRouter02 pancakeRouter = IPancakeRouter02(0xD99D1c33F9fC3444f8101754aBC46c52416550D1);
+        IPancakeRouter02 pancakeRouter = IPancakeRouter02(0x10ED43C718714eb63d5aA57B78B54704E256024E);
          // Create a pancakeswap pair for this new token
         _pancakePair = IPancakeFactory(pancakeRouter.factory())
             .createPair(address(this), pancakeRouter.WETH());

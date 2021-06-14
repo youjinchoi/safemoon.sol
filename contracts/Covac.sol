@@ -725,7 +725,7 @@ contract Covac is Context, IBEP20, Ownable {
 
     constructor () {
         IPancakeRouter02 pancakeRouter = IPancakeRouter02(0x10ED43C718714eb63d5aA57B78B54704E256024E);
-         // Create a pancakeswap pair for this new token
+        // Create a pancakeswap pair for this new token
         _pancakePair = IPancakeFactory(pancakeRouter.factory())
             .createPair(address(this), pancakeRouter.WETH());
 

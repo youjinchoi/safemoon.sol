@@ -668,8 +668,8 @@ interface IPancakeRouter02 is IPancakeRouter01 {
     ) external;
 }
 
-// test router 0x9Ac64Cc6e4415144C455BD8E4837Fea55603e5c3
-// test pair 0x844842f7797a0c3cf98b08d27270afb12df55073
+// test router 0xd99d1c33f9fc3444f8101754abc46c52416550d1
+// test pair 0x827fb0f3723008550be5d8adfbd4207a6bcb3003
 
 // deploy at 23:21, June 10th, 2021 https://testnet.bscscan.com/token/0x66090823efdcf679b810b6a25443c683ea6daeb5
 // deploy at 01:46, June 11th, 2021 https://testnet.bscscan.com/token/0xA6A7F73204E014D01592418AAeef010bCC948a5B
@@ -684,6 +684,8 @@ interface IPancakeRouter02 is IPancakeRouter01 {
 // CVT10, deploy at 23:53, June 13th, 2021 https://testnet.bscscan.com/token/0x88ABcDE0E023bEA901bE5752955D622259720E97
 // CVT11, deploy at 23:53, June 13th, 2021 https://testnet.bscscan.com/token/0xBA5e4A4E7e15eB2E2F7e3A52f556F2Eb86D151a0
 // CVT12 https://testnet.bscscan.com/token/0x34F9289fac8a84410B371f1f62c43e183A28Ca4C
+// CVT13 https://testnet.bscscan.com/token/0x699c9b4779cf9a12b6d7b963827d14eacf2de7e3
+// CVT14 https://testnet.bscscan.com/token/0x66b21DcC64bBB14d5192eEC86bd8Ce2580B06828#code
 contract Covac is Context, IBEP20, Ownable {
     using SafeMath for uint256;
     using Address for address;
@@ -702,8 +704,8 @@ contract Covac is Context, IBEP20, Ownable {
     uint256 private _rTotal = MAX - (MAX % _tTotal);
     uint256 private _tFeeTotal;
 
-    string private constant _name = "Covid Vaccine";
-    string private constant _symbol = "COVAC";
+    string private constant _name = "Covid Vaccine Test 14";
+    string private constant _symbol = "CVT14";
     uint8 private constant _decimals = 18;
     
     uint256 public _taxFee = 5;
@@ -712,16 +714,20 @@ contract Covac is Context, IBEP20, Ownable {
     uint256 public _liquidityFee = 5;
     uint256 private _previousLiquidityFee = _liquidityFee;
 
-    IPancakeRouter02 public pancakeRouter;
-    address public pancakePair;
+    IPancakeRouter02 public _pancakeRouter;
+    address public _pancakePair;
     
-    bool inSwapAndLiquify;
-    bool public swapAndLiquifyEnabled = false;
+    bool _inSwapAndLiquify;
+    bool public _swapAndLiquifyEnabled = true;
+    // use when _swapAndLiquifyEnabled is false
+    address public _liquidityFeeExternalWallet = 0x8c3D390A73a9bE5053f3AbE3bdBf4E4c155C8680;
 
     // 1.1% of total supply is the maximum transaction amount
     uint256 public constant _maxTxAmount = 209000000 * 10**18;
-    uint256 private constant numTokensSellToAddToLiquidity = 500000 * 10**18;
-    
+
+    // threshold to trigger auto LP supply
+    uint256 private _numTokensSellToAddToLiquidity = 500000 * 10**18;
+
     event SwapAndLiquifyEnabledUpdated(bool enabled);
     event SwapAndLiquify(
         uint256 tokensSwapped,
@@ -730,19 +736,19 @@ contract Covac is Context, IBEP20, Ownable {
     );
 
     modifier lockTheSwap {
-        inSwapAndLiquify = true;
+        _inSwapAndLiquify = true;
         _;
-        inSwapAndLiquify = false;
+        _inSwapAndLiquify = false;
     }
 
-    constructor (address routerAddress) {
-        IPancakeRouter02 _pancakeRouter = IPancakeRouter02(routerAddress);
+    constructor () {
+        IPancakeRouter02 pancakeRouter = IPancakeRouter02(0xD99D1c33F9fC3444f8101754aBC46c52416550D1);
          // Create a pancakeswap pair for this new token
-        pancakePair = IPancakeFactory(_pancakeRouter.factory())
-            .createPair(address(this), _pancakeRouter.WETH());
+        _pancakePair = IPancakeFactory(pancakeRouter.factory())
+            .createPair(address(this), pancakeRouter.WETH());
 
         // set the rest of the contract variables
-        pancakeRouter = _pancakeRouter;
+        _pancakeRouter = pancakeRouter;
 
         // exclude owner and this contract from fee
         _isExcludedFromFee[owner()] = true;
@@ -832,22 +838,30 @@ contract Covac is Context, IBEP20, Ownable {
         return rAmount.div(currentRate);
     }
 
+    function setLiquidityFeeExternalWallet(address liquidityFeeExternalWallet) public onlyOwner {
+        _liquidityFeeExternalWallet = liquidityFeeExternalWallet;
+    }
+
+    function setNumTokensSellToAddToLiquidity(uint256 numTokensSellToAddToLiquidity) public onlyOwner {
+        _numTokensSellToAddToLiquidity = numTokensSellToAddToLiquidity;
+    }
+
     // make the router and pair updatable to change liquidity pool if deprecated
-    function setRouter(address routerAddress) public onlyOwner() {
-        IPancakeRouter02 _pancakeRouter = IPancakeRouter02(routerAddress);
-        IPancakeFactory _pancakeFactory = IPancakeFactory(_pancakeRouter.factory());
-        address _pairAddress = _pancakeFactory.getPair(address(this), _pancakeRouter.WETH());
-        if (_pairAddress == address(0)) {
-            pancakePair = _pancakeFactory.createPair(address(this), _pancakeRouter.WETH());
+    function setRouter(address routerAddress) public onlyOwner {
+        IPancakeRouter02 pancakeRouter = IPancakeRouter02(routerAddress);
+        IPancakeFactory pancakeFactory = IPancakeFactory(pancakeRouter.factory());
+        address pairAddress = pancakeFactory.getPair(address(this), pancakeRouter.WETH());
+        if (pairAddress == address(0)) {
+            _pancakePair = pancakeFactory.createPair(address(this), pancakeRouter.WETH());
         } else {
-            pancakePair = _pairAddress;
+            _pancakePair = pairAddress;
         }
 
         // set the rest of the contract variables
-        pancakeRouter = _pancakeRouter;
+        _pancakeRouter = pancakeRouter;
     }
 
-    function excludeFromReward(address account) public onlyOwner() {
+    function excludeFromReward(address account) public onlyOwner {
         require(!_isExcluded[account], "Account is already excluded");
         if(_rOwned[account] > 0) {
             _tOwned[account] = tokenFromReflection(_rOwned[account]);
@@ -856,7 +870,7 @@ contract Covac is Context, IBEP20, Ownable {
         _excluded.push(account);
     }
 
-    function includeInReward(address account) external onlyOwner() {
+    function includeInReward(address account) external onlyOwner {
         require(_isExcluded[account], "Account is already included");
         for (uint256 i = 0; i < _excluded.length; i++) {
             if (_excluded[i] == account) {
@@ -877,9 +891,9 @@ contract Covac is Context, IBEP20, Ownable {
         _isExcludedFromFee[account] = false;
     }
 
-    function setSwapAndLiquifyEnabled(bool _enabled) public onlyOwner {
-        swapAndLiquifyEnabled = _enabled;
-        emit SwapAndLiquifyEnabledUpdated(_enabled);
+    function setSwapAndLiquifyEnabled(bool enabled) public onlyOwner {
+        _swapAndLiquifyEnabled = enabled;
+        emit SwapAndLiquifyEnabledUpdated(enabled);
     }
     
     // to receive BNB from pancakeswap router when swapping
@@ -931,9 +945,14 @@ contract Covac is Context, IBEP20, Ownable {
     function _takeLiquidity(uint256 tLiquidity) private {
         uint256 currentRate =  _getRate();
         uint256 rLiquidity = tLiquidity.mul(currentRate);
-        _rOwned[address(this)] = _rOwned[address(this)].add(rLiquidity);
-        if(_isExcluded[address(this)])
-            _tOwned[address(this)] = _tOwned[address(this)].add(tLiquidity);
+
+        // in case of supplying liquidity to another pool, save liquidity fee to the external wallet if _swapAndLiquifyEnabled is false
+        address liquidityFeeSavingAddress = _swapAndLiquifyEnabled ? address(this) : _liquidityFeeExternalWallet;
+
+        _rOwned[liquidityFeeSavingAddress] = _rOwned[liquidityFeeSavingAddress].add(rLiquidity);
+        if (_isExcluded[liquidityFeeSavingAddress]) {
+            _tOwned[liquidityFeeSavingAddress] = _tOwned[liquidityFeeSavingAddress].add(tLiquidity);
+        }
     }
     
     function calculateTaxFee(uint256 _amount) private view returns (uint256) {
@@ -949,7 +968,9 @@ contract Covac is Context, IBEP20, Ownable {
     }
 
     function removeAllFee() private {
-        if(_taxFee == 0 && _liquidityFee == 0) return;
+        if (_taxFee == 0 && _liquidityFee == 0) {
+            return;
+        }
 
         _previousTaxFee = _taxFee;
         _previousLiquidityFee = _liquidityFee;
@@ -1001,15 +1022,15 @@ contract Covac is Context, IBEP20, Ownable {
             contractTokenBalance = _maxTxAmount;
         }
 
-        bool overMinTokenBalance = contractTokenBalance >= numTokensSellToAddToLiquidity;
+        bool overMinTokenBalance = contractTokenBalance >= _numTokensSellToAddToLiquidity;
         if (
             overMinTokenBalance &&
-            !inSwapAndLiquify &&
-            from != pancakePair &&
-            swapAndLiquifyEnabled &&
-            !(from == address(this) && to == pancakePair)
+            !_inSwapAndLiquify &&
+            from != _pancakePair &&
+            _swapAndLiquifyEnabled &&
+            !(from == address(this) && to == _pancakePair)
         ) {
-            contractTokenBalance = numTokensSellToAddToLiquidity;
+            contractTokenBalance = _numTokensSellToAddToLiquidity;
             // add liquidity
             swapAndLiquify(contractTokenBalance);
         }
@@ -1053,12 +1074,12 @@ contract Covac is Context, IBEP20, Ownable {
         // generate the pancakeswap pair path of token -> weth
         address[] memory path = new address[](2);
         path[0] = address(this);
-        path[1] = pancakeRouter.WETH();
+        path[1] = _pancakeRouter.WETH();
 
-        _approve(address(this), address(pancakeRouter), tokenAmount);
+        _approve(address(this), address(_pancakeRouter), tokenAmount);
 
         // make the swap
-        pancakeRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(
+        _pancakeRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(
             tokenAmount,
             0, // accept any amount of BNB
             path,
@@ -1069,12 +1090,12 @@ contract Covac is Context, IBEP20, Ownable {
 
     function addLiquidity(uint256 tokenAmount, uint256 ethAmount) private {
         // approve token transfer to cover all possible scenarios
-        _approve(address(this), address(pancakeRouter), tokenAmount);
+        _approve(address(this), address(_pancakeRouter), tokenAmount);
 
         // SSL-06 | Return value not handled
         // We recommend using variables to receive the return value of the functions mentioned above andhandle both success and failure cases if needed by the business logic.
         // add the liquidity
-        pancakeRouter.addLiquidityETH{value: ethAmount}(
+        _pancakeRouter.addLiquidityETH{value: ethAmount}(
             address(this),
             tokenAmount,
             0, // slippage is unavoidable

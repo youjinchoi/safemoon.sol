@@ -686,8 +686,8 @@ contract Covac is Context, IBEP20, Ownable {
     uint256 private _rTotal = MAX - (MAX % _tTotal);
     uint256 private _tFeeTotal;
 
-    string private constant _name = "Covid Vaccine Test 14";
-    string private constant _symbol = "CVT14";
+    string private constant _name = "Covid Vaccine";
+    string private constant _symbol = "COVAC";
     uint8 private constant _decimals = 18;
     
     uint256 public _taxFee = 5;
@@ -1074,8 +1074,6 @@ contract Covac is Context, IBEP20, Ownable {
         // approve token transfer to cover all possible scenarios
         _approve(address(this), address(_pancakeRouter), tokenAmount);
 
-        // SSL-06 | Return value not handled
-        // We recommend using variables to receive the return value of the functions mentioned above andhandle both success and failure cases if needed by the business logic.
         // add the liquidity
         _pancakeRouter.addLiquidityETH{value: ethAmount}(
             address(this),
